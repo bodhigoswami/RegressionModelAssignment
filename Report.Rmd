@@ -1,0 +1,130 @@
+---
+title: "Regression Model Assignment"
+author: "Bodhi Goswami"
+date: "10/27/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+***Executive Summary***
+
+This report was prepared to explore relations of Miles per Gallon (mpg) of
+cars with respect to pertinent parameters a car might have. This included
+weight of the car, gross horsepower, type of transmission (automatic or manual),
+number of cylinders etc. The data set built in in R called *mtcars* was used to
+obtain conclusions.
+
+***Data set Overview***
+
+The data set mtcars contains info from *1974 Motor Trend US magazine* and contains
+performance chart of 32 vehicles from 1973 models. Below is a preview of mtcars.
+
+```{r, echo=FALSE}
+require(datasets); data("mtcars")
+head(mtcars)
+```
+
+***Exploratory Analysis***
+
+The coefficients used for Automatic/Manual transmission is *am* in the data above.
+The values set are 0 for automatic and 1 for manual transmission. Upon a simple
+boxplot shown in Figure 1, we can infer the mean milage for manual transmission
+cars are higher than automatic transmission cars. The points shown in Purple are
+the individual points plotted along with the boxplot for confirmation of the same.
+
+
+***Model Selection for Inference on MPG v/s Transmission Type***
+
+While Binary and Poisson models do not suit to be a good fit since this mpg is
+a quantifiable outcome with an upper bound per this data. The two best suited
+models, in my opinion, for selection were Liner Model and Generalized Linear Model.
+
+A linear model was fit as shown below to infer impact on milage due to all the
+vehicular parameters in the given dataset.
+
+```{r}
+fit<-lm(mpg~. -1,data=mtcars)
+summary(fit) $coef
+```
+
+Under the Estimate column, this shows the estimated of impact each of these parameters
+have on one unit increase in mpg. For instance, one unit increase in gross 
+horsepower would result in 2% reduction in milage. Since this is an inverse relation, higher
+number of milage can be achieved with lesser horsepower. On the contrary, higher number
+of gears will result in higher milage per the summary output. Each additional
+ton weight of car will reduce the Totale milage by about 4 miles/gallon. These are
+very interesting facts obtained from the linear model.
+
+As an attempt to fit liner model for mpg v/s our regressor of interest (transmission)
+code below was used. Inferences follow.
+
+```{r}
+lm.fit<-lm(mpg~as.factor(am), data=mtcars)
+mtcars$am<-as.factor(mtcars$am)
+summary(lm.fit)$coef
+```
+
+This code sets am(0) which is automatic transmission and gives an Estimate mpg of 17.14.
+Same can be observed in the boxplot on Figure 1. For the manual transmission the 
+Estimated miage is 17.14+7.24, which is about 7.24 mpg more than automatic. Hence
+from the linear model it can be inferred manual transmission cars serve higher milage
+per the given data.
+
+A generalized linear model fit was also performed to verify if the inference we obtained
+is accurate.
+
+```{r}
+glm.fit<-glm(mpg~as.factor(am), data=mtcars)
+summary(glm.fit)$coef
+```
+
+As expected, manual transmission cars are shown to have a higher milage of 7.24.
+This proves parity between Linear and Generalized Linear Model for this dataset
+to find mpg v/s transmission.
+
+***Residual Plot and Diagonostics***
+
+A resudual boxplot was done for mpg outcome upon the two regressors of transmissions.
+It was obtained the the residuals are much higher for Manual Transmission compared
+to Automatic Transmission. Please see plot shown on Apprendix Figure 2.
+
+***Conclusion***
+
+From the linear model discussed above it can be concluded that manual transmission
+cars provide higher milage than automatic transmission cars. Approximate difference
+in mpg for manual transmission cars was found to be around 7.2 miles per gallon.
+
+
+
+\newpage
+
+***Appendix***
+
+```{r, echo = FALSE}
+require(datasets); require(ggplot2)
+mtcars$am<-as.factor(mtcars$am)
+g = ggplot(mtcars, aes( x = as.factor(am), y = mpg))
+g = g + geom_boxplot(aes(fill=as.factor(am)),alpha = 0.35)
+g = g + geom_point(size =4, col = "purple", alpha = 0.75)
+g = g + xlab("Transmission Type (0 for Automatic, 1 for Manual)") +
+            ylab("Miles per Gallon (MPG)") + ggtitle("Mpg v/s Transmission")
+g = g + theme(plot.title = element_text(hjust='0.5'))
+g = g + labs(fill = "Transmission")
+g
+```
+
+*Fig 1: Plot Showing Higher Average MPG values for Manual Transmission*
+
+\newpage
+
+```{r}
+am.fit<-lm(mpg~am, data=mtcars)
+plot(resid(am.fit)~mtcars$am,pch=19,col="lightblue", 
+     xlab = "Transmission Type (0 for Automatic, 1 for Manual)", 
+     ylab = "Residuals")
+abline(h=0, col="red", lwd=3)
+```
+
+*Fig 2: BoxPlot of Residuals*
